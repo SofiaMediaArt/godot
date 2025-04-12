@@ -370,35 +370,40 @@ void BaseButton::shortcut_input(const Ref<InputEvent> &p_event) {
 	ERR_FAIL_COND(p_event.is_null());
 
 	if (!is_disabled() && p_event->is_pressed() && is_visible_in_tree() && !p_event->is_echo() && shortcut.is_valid() && shortcut->matches_event(p_event)) {
-		if (toggle_mode) {
-			status.pressed = !status.pressed;
+		press();
+	}
+}
 
-			_unpress_group();
-			if (button_group.is_valid()) {
-				button_group->emit_signal(SceneStringName(pressed), this);
-			}
+void BaseButton::press() {
+	if (is_disabled())
+		return;
+	if (toggle_mode) {
+		status.pressed = !status.pressed;
 
-			_toggled(status.pressed);
-			_pressed();
-
-		} else {
-			_pressed();
+		_unpress_group();
+		if (button_group.is_valid()) {
+			button_group->emit_signal(SceneStringName(pressed), this);
 		}
-		queue_redraw();
-		accept_event();
 
-		if (shortcut_feedback && is_inside_tree()) {
-			if (shortcut_feedback_timer == nullptr) {
-				shortcut_feedback_timer = memnew(Timer);
-				shortcut_feedback_timer->set_one_shot(true);
-				add_child(shortcut_feedback_timer);
-				shortcut_feedback_timer->set_wait_time(GLOBAL_GET("gui/timers/button_shortcut_feedback_highlight_time"));
-				shortcut_feedback_timer->connect("timeout", callable_mp(this, &BaseButton::_shortcut_feedback_timeout));
-			}
+		_toggled(status.pressed);
+		_pressed();
+	} else {
+		_pressed();
+	}
+	queue_redraw();
+	accept_event();
 
-			in_shortcut_feedback = true;
-			shortcut_feedback_timer->start();
+	if (shortcut_feedback && is_inside_tree()) {
+		if (shortcut_feedback_timer == nullptr) {
+			shortcut_feedback_timer = memnew(Timer);
+			shortcut_feedback_timer->set_one_shot(true);
+			add_child(shortcut_feedback_timer);
+			shortcut_feedback_timer->set_wait_time(GLOBAL_GET("gui/timers/button_shortcut_feedback_highlight_time"));
+			shortcut_feedback_timer->connect("timeout", callable_mp(this, &BaseButton::_shortcut_feedback_timeout));
 		}
+
+		in_shortcut_feedback = true;
+		shortcut_feedback_timer->start();
 	}
 }
 
@@ -488,6 +493,8 @@ void BaseButton::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_button_group", "button_group"), &BaseButton::set_button_group);
 	ClassDB::bind_method(D_METHOD("get_button_group"), &BaseButton::get_button_group);
+
+	ClassDB::bind_method(D_METHOD("press"), &BaseButton::press);
 
 	GDVIRTUAL_BIND(_pressed);
 	GDVIRTUAL_BIND(_toggled, "toggled_on");

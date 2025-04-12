@@ -141,6 +141,8 @@ public:
 
 	PackedStringArray get_configuration_warnings() const override;
 
+	void press();
+
 	BaseButton();
 	~BaseButton();
 };
